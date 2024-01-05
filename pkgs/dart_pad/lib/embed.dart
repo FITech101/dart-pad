@@ -12,6 +12,8 @@ import 'package:dartpad_shared/services.dart';
 import 'package:mdc_web/mdc_web.dart';
 import 'package:split/split.dart';
 
+import 'package:diff_match_patch/diff_match_patch.dart';
+
 import 'check_localstorage.dart';
 import 'completion.dart';
 import 'context.dart';
@@ -112,6 +114,7 @@ class Embed extends EditorUi {
 
   @override
   Document get currentDocument => context.dartDocument;
+
 
   /// Toggles the state of several UI components based on whether the editor is
   /// too busy to handle code changes, execute/reset requests, etc.
@@ -748,6 +751,10 @@ class Embed extends EditorUi {
     showHintButton.element.hidden = context.hint.isEmpty;
     solutionTab.toggleAttr('hidden', context.solution.isEmpty);
     editorIsBusy = false;
+
+    context.prevSources['dart'] = context.dartSource;
+    context.prevSources['html'] = context.htmlSource;
+    context.prevSources['css'] = context.cssSource;
   }
 
   @override
@@ -926,6 +933,7 @@ class Embed extends EditorUi {
           context.dartSource = result.source;
 
           if (parentLogger != null) {
+            context.prevSources['dart'] = context.dartSource;
             parentLogger?.logCodeFormat(getContextSources());
           }
 
@@ -1264,6 +1272,14 @@ class EmbedContext extends Context {
 
   final _dartReconcileController = StreamController<void>.broadcast();
 
+  Map _prevSources = {
+    'dart': '',
+    'html': '',
+    'css': '',
+  };
+
+  Map get prevSources => _prevSources;
+
   Object? jsToDart(jsObject) {
     if (jsObject is js.JsArray || jsObject is Iterable) {
       return jsObject.map(jsToDart).toList();
@@ -1280,6 +1296,7 @@ class EmbedContext extends Context {
   List<String> getObjectKeys(js.JsObject object) =>
       js.context['Object'].callMethod('keys', [object]).toList().cast<String>()
           as List<String>;
+  DiffMatchPatch dmp = DiffMatchPatch();
 
   EmbedContext(this.editor, this._testAndSolutionReadOnly)
       : _dartDoc = editor.document,
@@ -1287,21 +1304,29 @@ class EmbedContext extends Context {
         _cssDoc = editor.createDocument(content: '', mode: 'css'),
         _testDoc = editor.createDocument(content: '', mode: 'dart'),
         _solutionDoc = editor.createDocument(content: '', mode: 'dart') {
+
+    _prevSources['dart'] = '';
+    _prevSources['html'] = '';
+    _prevSources['css'] = '';
+
     editor.mode = 'dart';
     _dartDoc.onChange.listen((e) {
       if (parentLogger != null) {
-        parentLogger?.logCodeChange('dart', dartSource);
+        parentLogger?.logCodeChange('dart', dmp.diff(_prevSources['dart'], dartSource));
+        _prevSources['dart'] = dartSource;
       }
       _dartDirtyController.add(null);
     });
     _htmlDoc.onChange.listen((e) {
       if (parentLogger != null) {
-        parentLogger?.logCodeChange('html', htmlSource);
+        parentLogger?.logCodeChange('html', dmp.diff(_prevSources['html'], htmlSource));
+        _prevSources['html'] = htmlSource;
       }
     });
     _cssDoc.onChange.listen((e) {
       if (parentLogger != null) {
-        parentLogger?.logCodeChange('css', cssSource);
+        parentLogger?.logCodeChange('css', dmp.diff(_prevSources['css'], cssSource));
+        _prevSources['css'] = cssSource;
       }
     });
 
