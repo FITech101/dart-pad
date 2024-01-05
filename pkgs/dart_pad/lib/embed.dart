@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:html' hide Console, Document;
+import 'dart:js' as js;
 import 'dart:math' as math;
 
 import 'package:dartpad_shared/services.dart';
@@ -35,8 +36,13 @@ import 'sharing/gists.dart';
 import 'src/ga.dart';
 import 'util/detect_flutter.dart';
 import 'util/query_params.dart' show queryParams;
+import 'parent_logger.dart';
+import 'dart_source_expansion.dart';
 
 const int defaultSplitterWidth = 6;
+
+String iFrameId = '';
+ParentLogger? parentLogger;
 
 Embed? get embed => _embed;
 
@@ -371,6 +377,12 @@ class Embed extends EditorUi {
     SearchController(editorFactory, editor, snackbar);
   }
 
+  Map getContextSources() => ({
+    'dart': context.dartSource,
+    'html': context.htmlSource,
+    'css': context.cssSource,
+  });
+
   /// Initializes a listener for messages from the parent window. Allows this
   /// embedded iframe to display and run arbitrary Dart code.
   void _initHostListener() {
@@ -383,10 +395,31 @@ class Embed extends EditorUi {
 
       final type = data['type'];
 
+      if (type == 'iFrameId') {
+        iFrameId = data['iFrameId'].toString();
+        parentLogger = ParentLogger(iFrameId);
+        window.parent?.postMessage({
+          'type': 'iFrameIdReceivedConfirmation',
+          'iFrameId': iFrameId,
+        }, '*');
+      }
+
+      if (type == 'getCode') {
+        window.parent?.postMessage({
+          'type': 'code',
+          'iFrameId': iFrameId,
+          'code': getContextSources(),
+        }, '*');
+      }
+
       if (type == 'sourceCode') {
         lastInjectedSourceCode =
             Map<String, String>.from(data['sourceCode'] as Map);
         _resetCode();
+
+        if (data['format'] != null && data['format'] == true) {
+          _format();
+        }
 
         if (autoRunEnabled) {
           handleRun();
@@ -657,6 +690,7 @@ class Embed extends EditorUi {
 
   void _resetCode() {
     setContextSources(lastInjectedSourceCode);
+    parentLogger?.logCodeReset(getContextSources());
     Timer.run(() => unawaited(performAnalysis()));
   }
 
@@ -734,6 +768,10 @@ class Embed extends EditorUi {
       return false;
     }
 
+    if (parentLogger != null) {
+      parentLogger?.logCodeExecution(getContextSources());
+    }
+    
     _executionButtonCount++;
     ga.sendEvent('execution', 'initiated', label: '$_executionButtonCount');
 
@@ -886,6 +924,11 @@ class Embed extends EditorUi {
         // And, check that the format request did modify the source code.
         if (originalSource != result.source) {
           context.dartSource = result.source;
+
+          if (parentLogger != null) {
+            parentLogger?.logCodeFormat(getContextSources());
+          }
+
           unawaited(performAnalysis());
         }
       }
@@ -1221,6 +1264,23 @@ class EmbedContext extends Context {
 
   final _dartReconcileController = StreamController<void>.broadcast();
 
+  Object? jsToDart(jsObject) {
+    if (jsObject is js.JsArray || jsObject is Iterable) {
+      return jsObject.map(jsToDart).toList();
+    }
+    if (jsObject is js.JsObject) {
+      return Map.fromIterable(
+        getObjectKeys(jsObject),
+        value: (key) => jsToDart(jsObject[key as Object]),
+      );
+    }
+    return jsObject;
+  }
+
+  List<String> getObjectKeys(js.JsObject object) =>
+      js.context['Object'].callMethod('keys', [object]).toList().cast<String>()
+          as List<String>;
+
   EmbedContext(this.editor, this._testAndSolutionReadOnly)
       : _dartDoc = editor.document,
         _htmlDoc = editor.createDocument(content: '', mode: 'html'),
@@ -1228,7 +1288,23 @@ class EmbedContext extends Context {
         _testDoc = editor.createDocument(content: '', mode: 'dart'),
         _solutionDoc = editor.createDocument(content: '', mode: 'dart') {
     editor.mode = 'dart';
-    _dartDoc.onChange.listen((_) => _dartDirtyController.add(null));
+    _dartDoc.onChange.listen((e) {
+      if (parentLogger != null) {
+        parentLogger?.logCodeChange('dart', dartSource);
+      }
+      _dartDirtyController.add(null);
+    });
+    _htmlDoc.onChange.listen((e) {
+      if (parentLogger != null) {
+        parentLogger?.logCodeChange('html', htmlSource);
+      }
+    });
+    _cssDoc.onChange.listen((e) {
+      if (parentLogger != null) {
+        parentLogger?.logCodeChange('css', cssSource);
+      }
+    });
+
     _createReconciler(_dartDoc, _dartReconcileController, 1250);
   }
 

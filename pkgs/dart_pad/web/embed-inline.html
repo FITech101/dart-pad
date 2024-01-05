@@ -35,7 +35,7 @@ BSD-style license that can be found in the LICENSE file. -->
     <script src="scripts/check_localstorage.js"></script>
 
     <script defer src="scripts/embed_inline.dart.js"></script>
-    <script defer src="scripts/ga.js"></script>
+    <!-- <script defer src="scripts/ga.js"></script> -->
     <script type="text/javascript" src="scripts/dark_mode.js"></script>
 
     <!-- begin Material Design -->
@@ -80,7 +80,7 @@ BSD-style license that can be found in the LICENSE file. -->
                              </span>
                             <span class="mdc-tab__ripple"></span>
                         </button>
-                        <button id="test-tab" class="mdc-tab mdc-tab" role="tab" tabindex="0">
+                        <button id="test-tab" class="mdc-tab mdc-tab" role="tab" tabindex="0" hidden>
                              <span class="mdc-tab__content">
                                  <span class="mdc-tab__text-label">Tests</span>
                             </span>
@@ -95,15 +95,15 @@ BSD-style license that can be found in the LICENSE file. -->
         </div>
     </nav>
     <div class="nav-buttons">
-        <button id="install-button" class="mdc-button">Install SDK</button>
-        <button id="show-hint" class="mdc-button">Hint</button>
+        <button id="install-button" class="mdc-button" hidden>Install SDK</button>
+        <button id="show-hint" class="mdc-button" hidden>Hint</button>
         <button id="format-code" class="mdc-button">Format</button>
         <button id="reload-gist" class="mdc-button">Reset</button>
         <button id="execute" class="mdc-button mdc-button--raised">
             <i class="material-icons mdc-button__icon">play_arrow</i>
             Run
         </button>
-        <div class="position-relative text-right pr-2">
+        <div class="position-relative text-right pr-2" hidden>
             <button id="menu-button" class="mdc-icon-button material-icons">more_vert</button>
             <div id="main-menu" class="mdc-menu mdc-menu-surface">
                 <ul class="mdc-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">

@@ -1,0 +1,41 @@
+FROM dart:3.2.0
+
+WORKDIR /app
+
+RUN apt update && apt install -y protobuf-compiler
+
+RUN groupadd --system dart && \
+  useradd --no-log-init --system --home /home/dart --create-home -g dart dart
+RUN chown dart:dart /app
+
+# Work around https://github.com/dart-lang/sdk/issues/47093
+RUN find /usr/lib/dart -type d -exec chmod 755 {} \;
+
+USER dart
+
+## Get flutter
+WORKDIR /app
+
+## TODO: on update, change version
+RUN git clone --depth 1 -b 3.16.5 https://github.com/flutter/flutter.git \
+  && flutter/bin/flutter doctor \
+  && flutter/bin/flutter config --enable-web \
+  && flutter/bin/flutter precache --web --no-android --no-ios --no-linux --no-windows --no-macos --no-fuchsia
+RUN export PATH="$PATH:`pwd`/app/flutter/bin"
+
+COPY --chown=dart:dart pkgs/dart_services /app/dart_services
+COPY --chown=dart:dart pkgs/dartpad_shared /app/dartpad_shared
+
+WORKDIR /app/dart_services
+
+ENV FLUTTER_ROOT=/app/flutter
+
+RUN dart pub get
+RUN dart pub get --offline
+
+RUN dart run grinder build-storage-artifacts build-project-templates
+
+RUN dart compile exe bin/server.dart -o bin/server
+
+EXPOSE 8080
+CMD ["/app/dart_services/bin/server"]

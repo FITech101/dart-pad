@@ -1,0 +1,35 @@
+FROM dart:3.2.0
+
+WORKDIR /app
+
+RUN apt update && apt install -y protobuf-compiler
+
+RUN groupadd --system dart && \
+  useradd --no-log-init --system --home /home/dart --create-home -g dart dart
+RUN chown dart:dart /app
+
+# Work around https://github.com/dart-lang/sdk/issues/47093
+RUN find /usr/lib/dart -type d -exec chmod 755 {} \;
+
+USER dart
+
+COPY --chown=dart:dart pkgs/dart_pad /app/dart_pad
+COPY --chown=dart:dart pkgs/dartpad_shared /app/dartpad_shared
+
+WORKDIR /app/dart_pad
+
+# Replace localhost with 0.0.0.0 for docker compatibility
+RUN sed -i 's/localhost/0.0.0.0/g' bin/serve.dart
+
+ENV PATH="/home/dart/.pub-cache/bin:${PATH}"
+RUN dart pub global activate protoc_plugin
+RUN dart pub global activate grinder
+
+RUN dart pub get
+RUN dart pub get --offline
+
+# Define and expose backend port
+ENV DARTPAD_BACKEND=http://0.0.0.0:8080
+ENV SERVER_URL=http://0.0.0.0:8080
+
+CMD ["grind", "serve-local-backend", "--server-url=http://0.0.0.0:8080"]

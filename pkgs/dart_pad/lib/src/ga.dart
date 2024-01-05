@@ -9,7 +9,7 @@ import 'dart:js';
 class Analytics {
   const Analytics();
 
-  bool get isAvailable => _gaFunction != null;
+  bool get isAvailable => false;
 
   void sendPage({String? pageName}) {
     if (pageName != null && pageName.isNotEmpty) {

@@ -99,6 +99,7 @@ const Set<String> supportedFlutterPackages = {
   'flutter_svg',
   'go_router',
   'google_fonts',
+  'http',
   'hooks_riverpod',
   'provider',
   'riverpod_navigator',

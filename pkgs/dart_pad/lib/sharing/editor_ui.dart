@@ -19,6 +19,7 @@ import '../elements/elements.dart';
 import '../services/common.dart';
 import '../services/execution.dart';
 import '../util/keymap.dart';
+import '../dart_source_expansion.dart';
 
 abstract class EditorUi {
   final Logger logger = Logger('dartpad');
@@ -204,8 +205,14 @@ abstract class EditorUi {
     ga.sendEvent('main', 'run');
     runButton.disabled = true;
 
+    var dartSource = fullDartSource;
+    const checker = '\\bimport\\s*["\']dart:io["\']\\s*';
+    if (dartSource.contains(RegExp(checker))) {
+      dartSource = modifyDartSourceToHandleStdinReadLineSync(dartSource);
+    }
+
     final compilationTimer = Stopwatch()..start();
-    final compileRequest = CompileRequest(source: fullDartSource);
+    final compileRequest = CompileRequest(source: dartSource);
 
     try {
       if (shouldCompileDDC) {

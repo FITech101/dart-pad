@@ -1,0 +1,16 @@
+
+services:
+  dartpad-frontend-new:
+    image: "dart-pad:fitech101"
+    restart: unless-stopped
+    depends_on:
+      - dartpad-backend-new
+    ports:
+      - "8000:8000"
+
+  dartpad-backend-new:
+    image: "dart-services:fitech101"
+    restart: unless-stopped
+    mem_limit: 4g
+    ports:
+      - "8080:8080"
