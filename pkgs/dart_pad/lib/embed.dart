@@ -12,8 +12,6 @@ import 'package:dartpad_shared/services.dart';
 import 'package:mdc_web/mdc_web.dart';
 import 'package:split/split.dart';
 
-import 'package:diff_match_patch/diff_match_patch.dart';
-
 import 'check_localstorage.dart';
 import 'completion.dart';
 import 'context.dart';
@@ -40,6 +38,7 @@ import 'util/detect_flutter.dart';
 import 'util/query_params.dart' show queryParams;
 import 'parent_logger.dart';
 import 'dart_source_expansion.dart';
+import 'string_differ.dart';
 
 const int defaultSplitterWidth = 6;
 
@@ -1296,7 +1295,6 @@ class EmbedContext extends Context {
   List<String> getObjectKeys(js.JsObject object) =>
       js.context['Object'].callMethod('keys', [object]).toList().cast<String>()
           as List<String>;
-  DiffMatchPatch dmp = DiffMatchPatch();
 
   EmbedContext(this.editor, this._testAndSolutionReadOnly)
       : _dartDoc = editor.document,
@@ -1312,20 +1310,20 @@ class EmbedContext extends Context {
     editor.mode = 'dart';
     _dartDoc.onChange.listen((e) {
       if (parentLogger != null) {
-        parentLogger?.logCodeChange('dart', dmp.diff(_prevSources['dart'], dartSource));
+        parentLogger?.logCodeChange('dart', getDiffs(_prevSources['dart'], dartSource));
         _prevSources['dart'] = dartSource;
       }
       _dartDirtyController.add(null);
     });
     _htmlDoc.onChange.listen((e) {
       if (parentLogger != null) {
-        parentLogger?.logCodeChange('html', dmp.diff(_prevSources['html'], htmlSource));
+        parentLogger?.logCodeChange('html', getDiffs(_prevSources['html'], htmlSource));
         _prevSources['html'] = htmlSource;
       }
     });
     _cssDoc.onChange.listen((e) {
       if (parentLogger != null) {
-        parentLogger?.logCodeChange('css', dmp.diff(_prevSources['css'], cssSource));
+        parentLogger?.logCodeChange('css', getDiffs(_prevSources['css'], cssSource));
         _prevSources['css'] = cssSource;
       }
     });

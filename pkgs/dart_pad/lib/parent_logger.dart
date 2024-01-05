@@ -29,14 +29,17 @@ class ParentLogger {
     window.parent?.postMessage(_logMessage('button click', 'format', code: code), '*');
   }
 
-  void logCodeChange(String editorTab, Object? changeDiff) {
-    final message = {
+  Map _codeChange(editorTab, diffs) {
+    return {
       'iFrameId': _iFrameId,
       'type': 'code change',
       'editorTab': editorTab,
-      'changeDiff': changeDiff,
+      'diffs': diffs,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
-    window.parent?.postMessage(message, '*');
+  }
+
+  void logCodeChange(String editorTab, List<Map> diffs) {
+    window.parent?.postMessage(_codeChange(editorTab, diffs), '*');
   }
 }
