@@ -6,6 +6,9 @@ Future<String> __readInputWithPrompt() async {
   if (input == null) {
     throw Exception("User pressed cancel when asked for input.");
   }
+
+  print('\x1B[31m' + input + '\x1B[0m');
+  await __sleep(250);
   
   return input;
 }
