@@ -38,7 +38,6 @@ import 'util/detect_flutter.dart';
 import 'util/query_params.dart' show queryParams;
 import 'parent_logger.dart';
 import 'dart_source_expansion.dart';
-import 'string_differ.dart';
 
 const int defaultSplitterWidth = 6;
 
@@ -1310,20 +1309,20 @@ class EmbedContext extends Context {
     editor.mode = 'dart';
     _dartDoc.onChange.listen((e) {
       if (parentLogger != null) {
-        parentLogger?.logCodeChange('dart', getDiffs(_prevSources['dart'], dartSource));
+        parentLogger?.logCodeChange('dart', _prevSources['dart'], dartSource);
         _prevSources['dart'] = dartSource;
       }
       _dartDirtyController.add(null);
     });
     _htmlDoc.onChange.listen((e) {
       if (parentLogger != null) {
-        parentLogger?.logCodeChange('html', getDiffs(_prevSources['html'], htmlSource));
+        parentLogger?.logCodeChange('html', _prevSources['html'], htmlSource);
         _prevSources['html'] = htmlSource;
       }
     });
     _cssDoc.onChange.listen((e) {
       if (parentLogger != null) {
-        parentLogger?.logCodeChange('css', getDiffs(_prevSources['css'], cssSource));
+        parentLogger?.logCodeChange('css', _prevSources['css'], cssSource);
         _prevSources['css'] = cssSource;
       }
     });
