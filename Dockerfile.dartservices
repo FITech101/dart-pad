@@ -1,4 +1,4 @@
-FROM dart:3.2.0
+FROM dart:3.5.0
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ USER dart
 WORKDIR /app
 
 ## TODO: on update, change version
-RUN git clone --depth 1 -b 3.16.5 https://github.com/flutter/flutter.git \
+RUN git clone --depth 1 -b 3.24.0 https://github.com/flutter/flutter.git \
   && flutter/bin/flutter doctor \
   && flutter/bin/flutter config --enable-web \
   && flutter/bin/flutter precache --web --no-android --no-ios --no-linux --no-windows --no-macos --no-fuchsia
