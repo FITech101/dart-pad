@@ -97,6 +97,7 @@ const Set<String> supportedFlutterPackages = {
   'flutter_processing',
   'flutter_riverpod',
   'flutter_svg',
+  'get',
   'go_router',
   'google_fonts',
   'http',
