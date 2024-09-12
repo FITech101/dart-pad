@@ -46,6 +46,8 @@
   "glob": "2.1.2",
   "go_router": "14.2.3",
   "google_fonts": "6.2.1",
+  "hive_ce": "2.5.0+2",
+  "hive_ce_flutter": "2.0.0",
   "html": "0.15.4",
   "http": "1.2.2",
   "http_multi_server": "3.2.1",

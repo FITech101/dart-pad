@@ -105,6 +105,8 @@ const Set<String> supportedFlutterPackages = {
   'google_fonts',
   'http',
   'hooks_riverpod',
+  'hive_ce',
+  'hive_ce_flutter',
   'provider',
   'riverpod_navigator',
   'shared_preferences',
