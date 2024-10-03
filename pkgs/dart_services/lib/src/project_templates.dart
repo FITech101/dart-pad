@@ -110,8 +110,8 @@ const Set<String> supportedFlutterPackages = {
   'provider',
   'riverpod_navigator',
   'shared_preferences',
-  'video_player'
-  'web_socket_channel',
+  'video_player',
+  'web_socket_channel'
 };
 
 /// The set of packages which indicate that Flutter Web is being used.
